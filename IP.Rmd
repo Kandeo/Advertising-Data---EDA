@@ -1,0 +1,469 @@
+---
+title: "Independent Project Week 12"
+author: "Christine Kandeo"
+date: "1/22/2022"
+output: html_document
+---
+# DEFINING THE QUESTION
+
+# Specific Data Analytics Question
+
+Understanding characteristics of Users likely to click on the advertisement using previous advertising data.
+
+# Metrics for Success
+
+Accurately identifying variables that likely lead to customers clicking the advertisement.
+
+# Understanding the Context
+
+Marketing is the process of getting people interested in a company's product or service. Its mainly about reaching the target audience at the right place and the right time. 
+
+With more than 4.8 billion people using the internet today, internet marketing is one of the easiest and most affordable ways to reach prospects. However, targeting the right audience is still a challenge in online marketing. Spending millions to display an advertisement to an audience that is not likely to buy the products is costly.
+
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. Using previous advertising data, she mainly want to identify characteristics of her target audience.This is the specific group of consumers most likely to see her ad campaign. Factors that might dictate the audience include: age, gender, income and location. Defining and identifying the target will allow her business to focus marketing efforts and funds on the right group. 
+
+# Experimental Design.
+
+1.Data Preparation
+
+ -  Loading the dataset
+ 
+ -  Data Uniformity
+ 
+ -  Handling Missing/Duplicate Values
+ 
+ -  Checking Outliers
+ 
+2.Exploratory Data Analysis
+
+ -  Univariate Analysis
+  
+ -  Bivariate Analysis
+ 
+3.Conclusions and Recommendations
+
+# Data Relevance
+
+ -  Daily Time Spent on Site - Amount of time in minutes spent on the site by a user
+
+ -  Age - Age of a user in years
+
+ -  Area Income - Average Income of the area of a user
+
+ -  Daily Internet Usage - Daily Average Minutes a user spends on the Internet
+
+ -  Ad Topic Line - Headline of the Advertisement
+
+ -  City - User's City of origin
+
+ -  Male - Gender, whether male or not
+
+ -  Country - User's  Country of origin
+
+ -  Time stamp - Time the user clicked on the Ad/closed the window
+
+ -  Clicked on Ad - 0 ~ User did not click the Advertisement 
+                    1 ~ User clicked the Advertisement.
+
+# 1. Data Preparation
+
+Loading Libraries
+``` {r}
+#Loading dependencies: 
+library(tidyverse)
+library(scales)
+library(ggcorrplot)
+library(psych)
+
+```
+
+Loading the Dataset
+```{r}
+#Importing the data to the Global Environment:
+Adv <- read.csv("http://bit.ly/IPAdvertisingData", header = TRUE, sep = ",")
+
+#Printing the first 4 rows of the dataframe
+head(Adv, n=4)
+
+```
+
+```{r}
+#Checking the Number of Rows and Columns:
+dim(Adv)
+
+```
+
+Data Uniformity
+```{r}
+#Getting Information on the data types on each respective column:
+sapply(Adv, class)
+
+```
+
+```{r}
+#Renaming the Male column to Gender for ease of reference:
+names(Adv)[names(Adv) == 'Male'] <- 'Gender'
+
+```
+
+```{r}
+#Re-coding Gender to 0 = Female and 1 = Male:
+Adv$Gender[Adv$Gender == 0 ] <- "Female"
+Adv$Gender[Adv$Gender == 1] <- "Male"
+
+```
+
+
+Irrelevant Observations
+```{r}
+#Dropping the City column since the Country is already indicated:
+Adv$City <- NULL
+
+```
+
+
+```{r}
+#Viewing the final information:
+str(Adv)
+
+```
+Observations:
+
+ - The Dataset is made up of 1000 Rows and 10 Columns
+ 
+ - The datatypes in the data are as follows:
+ 
+   -  Continuous: Daily time spent on site, Age, Area Income and Daily Internet usage.
+   
+   -  Binary: Gender, Clicked on Ad
+   
+   -  Character: Ad Topic line, Country 
+   
+   -  DataTime: Timestamp
+
+
+Missing Values
+```{r}
+#Checking for null entries in each column:
+colSums(is.na(Adv))
+
+#For the entire data set: 
+sum(is.na(Adv))
+
+```
+
+Duplicate values
+```{r}
+#Checking for identical entries:
+sum(duplicated(Adv))
+
+#Alternatively:
+any(duplicated(Adv))
+
+```
+
+The data has no missing or duplicate values.
+
+
+Checking for Outliers
+```{r}
+#Using a Box plot to summarize the distribution of the numeric variables: 
+qplot( x =  Daily.Time.Spent.on.Site, y = "", geom = "boxplot", data = Adv, col = I("aquamarine3"), fill = I("darkolivegreen4"), main = "Daily Time Spent on Site")
+qplot( x =  Age, y = "", geom = "boxplot", data = Adv, col = I("aquamarine3"), fill = I("darkolivegreen4"), main = "Age")
+qplot( x =  Area.Income, y = "", geom = "boxplot", data = Adv,col = I("aquamarine3"), fill = I("darkolivegreen4"), main = "Area Income")
+qplot( x =  Daily.Internet.Usage, y = "", geom = "boxplot", data = Adv, col = I("aquamarine3"), fill = I("darkolivegreen4"), main = "Daily Internet Usage")
+
+
+```
+
+
+From the Plots above:
+
+Outliers can be observed on the Area Income column. Since there's no basis to assume the entries are not valid observations, no outliers are dropped.
+
+
+
+# 2. Exploratory Data Analysis
+
+This process involves investigating the dataset to discover patterns.
+
+# Univariate Analysis
+
+This analysis aims to explore each variable in the dataset separately
+
+ - Clicked on Advertisement Distribution
+
+```{r}
+#To view the distribution of Clicked on Ad where 0 = Did not click on Ad  and 1 = Clicked on Ad :
+Ad_table <- table(Adv$Clicked.on.Ad)
+Ad_table
+
+```
+
+```{r}
+#Plotting the Information above on a bar chart:
+barplot(Ad_table,
+main = "Clicked on Ad Distribution",
+xlab = "Advertisment",
+ylab = "Frequency",
+names.arg = c("Ad not Clicked", "Ad Clicked"),
+col = c("darkgreen", "darkseagreen4"),
+horiz = FALSE)
+
+```
+
+The dataset is balanced as it contains equal number of samples from each output class.
+
+The ratio between those who clicked on the Ad and those who did not is equal.
+
+
+ - Gender Distribution
+```{r}
+#To view the Gender distribution table:
+gender_table <- table(Adv$Gender)
+gender_table
+
+```
+
+```{r}
+#Plotting the chart on Gender distribution:
+x <- c(51.9, 48.1)
+labels <- c('Females', 'Males')
+colors <- c('darkgreen','darkolivegreen2')
+#pie_percent<- round(100*x/sum(x), 0) 
+pie(x, labels = percent(x/100), main='Gender Distribution', density=30, col=colors)
+legend("topright", c("Females", "Males"), cex = 0.9, fill = colors)
+
+```
+
+48% of the Users were Males.
+
+In as much as majority of the Users are non-males, the distribution is relatively equal there being only about 4% more females than males.
+
+ - Continuous Features
+```{r}
+#Plotting a histogram to understand the distribution of the continuous features:
+ggplot(data = Adv, mapping = aes(x = Daily.Time.Spent.on.Site)) + 
+  geom_histogram(fill = "darkseagreen4", color = "black", binwidth = 2) + labs(x = "Daily Time Spent on Site (min's)", title = "Distribution of Daily Time Spent on Site Per Session (mins)")
+ggplot(data = Adv, mapping = aes(x = Age)) + 
+  geom_histogram(fill = "darkseagreen4", color = "black", binwidth = 2) + labs(x = "Age Distribution", title = "Distribution of Age (years)")
+ggplot(data = Adv, mapping = aes(x = Area.Income)) + 
+  geom_histogram(fill = "darkseagreen4", color = "black", binwidth = 10000) + labs(x = "Income Levels", title = "Distribution of Income Levels")
+ggplot(data = Adv, mapping = aes(x = Daily.Internet.Usage)) + 
+  geom_histogram(fill = "darkseagreen4", color = "black", binwidth = 10) + labs(x = "Daily Internet Usage", title = "Distribution of Daily Internet Usage (mins)")
+
+```
+
+```{r}
+#Printing the Descriptive Summary:
+summary(Adv)
+```
+Observations:
+
+ - Daily Time Spent on Site - The average amount of time spent on the Site of 65 minutes shows its popularity. Users spent between 33 and 91 Minutes on the site per session.
+ 
+ - Age - The average age of the Users is 36 years with the youngest user being 19 and the oldest being 61 years. Looking at the plot, it can be concluded that the site mainly targeted adult users (30-40 years).  
+ 
+ - Area Income - The lowest Income level was 13,996 and highest 79,485. Majority of the users were earning about 55,000 . This indicates that most of the users belonged to different Income Levels hence different social classes.
+ 
+ - Daily Internet Usage - Majority of the users spent 3 hours/180 minutes on the Internet a day with the peak being close to 5 hours/270 minutes and least being about 2 hours.
+ 
+ 
+ 
+# Bivariate Analysis
+ 
+ This analysis involves two variables being observed against each other.
+ 
+ - Correlation Matrix
+ 
+```{r}
+#To check for correlation between the variables:
+
+#Selecting the subset of variables.:
+corr <- select(Adv , 'Daily.Time.Spent.on.Site', 'Age', 'Area.Income', 'Daily.Internet.Usage', 'Clicked.on.Ad')
+
+#Plotting the matrix:
+ggcorrplot(cor(corr), hc.order = TRUE, lab = TRUE, colors = c("darkgreen", "darkseagreen", "darkolivegreen1")) + (labs(title = "Correlation Matrix \n"))
+ 
+
+```
+
+ - A moderate positive relationship of 0.52 exists between Daily Internet Usage and Daily Time Spent on Site.
+ 
+ - Clicked on Advertisement and Age have a relationship of 0.49
+ 
+Observation:
+
+   - Daily Internet Usage and Daily Time Spent on Site: Users who spend more time on the internet also spend more time on the site.
+  
+   
+
+  - Clicked on Ad and Daily Time Spent on Site
+ 
+```{r}
+#Converting the Clicked on Ad from numeric to character
+Adv$Clicked.on.Ad <- as.character(Adv$Clicked.on.Ad)
+
+```
+
+
+```{r}
+#Stacked bar plot with the 2 groups:
+options(repr.plot.width = 13, repr.plot.height = 7)
+ggplot(data = Adv, aes(x = Daily.Time.Spent.on.Site, fill = Clicked.on.Ad))+
+    geom_histogram(bins = 35, color = 'darkgreen') + 
+    labs(title = 'Clicked on Ad and Time Spent on the Site', x = 'Time Spent on the Site (minutes)', y = 'Frequency', fill = 'Clicked on ad') +
+        scale_color_brewer(palette = 'Set2') + theme(plot.title = element_text(size = 18, face = 'bold', color = 'darkolivegreen'),
+             axis.title.x = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.title.y = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.text.x = element_text(size = 13, angle = 45),
+             axis.text.y = element_text(size = 13),
+             legend.title = element_text(size = 13, color = 'darkolivegreen'),
+             legend.text = element_text(size = 12))
+
+```
+
+A negative relationship exists between Clicked on Ad and Daily time spent on site. Those likely to click on the ad spent the least amount of time daily on the site.
+
+Majority of those who did not Click on the ad spent the most time on the site.
+
+
+ - Clicked on Ad and Age
+ 
+```{r}
+#Stacked bar plot with the 2 groups:
+options(repr.plot.width = 13, repr.plot.height = 7)
+ggplot(data = Adv, aes(x = Age, fill = Clicked.on.Ad))+
+    geom_histogram(bins = 35, color = 'darkgreen') + 
+    labs(title = 'Clicked on Ad and Age', x = 'Age (Years)', y = 'Frequency', fill = 'Clicked on ad') +
+        scale_color_brewer(palette = 'Greens') + theme(plot.title = element_text(size = 18, face = 'bold', color = 'darkolivegreen'),
+             axis.title.x = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.title.y = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.text.x = element_text(size = 13, angle = 45),
+             axis.text.y = element_text(size = 13),
+             legend.title = element_text(size = 13, color = 'darkolivegreen'),
+             legend.text = element_text(size = 12))
+
+
+```
+
+Majority of those who did not Click on the Ad belonged to the younger age group. Users aged between 20 to 40 are spending more time on site daily but less chances of them clicking on the Ad. 
+
+Those who clicked on the Ad were mostly around 35 years and over.
+
+
+ - Clicked on Ad and Income 
+ 
+```{r}
+#Stacked bar plot with the 2 groups:
+options(repr.plot.width = 13, repr.plot.height = 7)
+ggplot(data = Adv, aes(x = Area.Income, fill = Clicked.on.Ad))+
+    geom_histogram(bins = 35, color = 'darkgreen') + 
+    labs(title = 'Clicked on Ad and Income Levels', x = 'Income Levels ($)', y = 'Frequency', fill = 'Clicked on ad') +
+        scale_color_brewer(palette = 'Greens') + theme(plot.title = element_text(size = 18, face = 'bold', color = 'darkolivegreen'),
+             axis.title.x = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.title.y = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.text.x = element_text(size = 13, angle = 45),
+             axis.text.y = element_text(size = 13),
+             legend.title = element_text(size = 13, color = 'darkolivegreen'),
+             legend.text = element_text(size = 12))
+
+
+
+```
+
+Those earning more were less likely to click on the Ad. 
+
+
+ - Clicked on Ad and Daily Internet Usage
+ 
+```{r}
+#Stacked bar plot with the 2 groups:
+options(repr.plot.width = 13, repr.plot.height = 7)
+ggplot(data = Adv, aes(x = Daily.Internet.Usage, fill = Clicked.on.Ad))+
+    geom_histogram(bins = 35, color = 'darkgreen') + 
+    labs(title = 'Clicked on Ad and Daily Internet Usage', x = 'Daily Internet Usage ($)', y = 'Frequency', fill = 'Clicked on ad') +
+        scale_color_brewer(palette = 'Greens') + theme(plot.title = element_text(size = 18, face = 'bold', color = 'darkolivegreen'),
+             axis.title.x = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.title.y = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.text.x = element_text(size = 13, angle = 45),
+             axis.text.y = element_text(size = 13),
+             legend.title = element_text(size = 13, color = 'darkolivegreen'),
+             legend.text = element_text(size = 12))
+
+
+
+```
+
+Those spending more time on the Internet daily were less likely to Click on Ads.
+
+
+ - Clicked on Ad and Gender
+ 
+```{r}
+
+Adv %>%
+  filter(Clicked.on.Ad  %in% c("0", "1")) %>%
+  ggplot(aes(Gender)) + geom_bar(aes(fill = Clicked.on.Ad), alpha = 1) + facet_wrap(~ Clicked.on.Ad) + labs(title = "Clicked on Ad by Gender")
+  
+```
+
+Females most likely clicked on Ads.
+
+
+ - Income Levels by Gender
+ 
+```{r}
+#Stacked bar plot with the 2 groups:
+options(repr.plot.width = 13, repr.plot.height = 7)
+ggplot(data = Adv, aes(x = Area.Income, fill = Gender))+
+    geom_histogram(bins = 35, color = 'darkgreen') + 
+    labs(title = 'Income Levels by Gender', x = 'Income Levels ($)', y = 'Frequency', fill = 'Gender') +
+        scale_color_brewer(palette = 'Set2') + theme(plot.title = element_text(size = 18, face = 'bold', color = 'darkolivegreen'),
+             axis.title.x = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.title.y = element_text(size = 15, face = 'bold', color = 'darkolivegreen'),
+             axis.text.x = element_text(size = 13, angle = 45),
+             axis.text.y = element_text(size = 13),
+             legend.title = element_text(size = 13, color = 'darkolivegreen'),
+             legend.text = element_text(size = 12))
+
+```
+
+From the plots above, Both Males and Females with Area income less than 50,000 are main customers of Ad as almost all whose income is more than 60,000 are not likely to click on Ads.
+
+# Conclusions and Recommendations
+
+ - Younger users spent more time on the site. Those between 20 and 40 can form the main target group for the marketing campaign.
+ 
+ - If the ad of the related course is intended for those above 35 years, then the site is favorable.
+ 
+ - High Income earners are not the best target group when it come to the Ad as they are less likely to click on the Ad. 
+ 
+ - The more time a user spends on the Internet daily, the less they are likely to click on an Ad.
+ 
+ - The Entrepreneur should therefore focus on Users:
+ 
+        - Spending less time on the Site
+ 
+        - Aged 35 Years and over
+        
+        - From a lower Income group: less than 60,000
+        
+        - Spending less time daily on the Internet.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

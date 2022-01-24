@@ -1,7 +1,7 @@
 # 
 # Customer Advertisment Clicks - EDA
 
-#### Data Science Project,January 2022
+#### Data Science Project, January 2022
 
 #### By **Christine Kiki**
 

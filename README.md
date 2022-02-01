@@ -17,7 +17,7 @@ She would now like to employ your services as a Data Science Consultant to help 
 No Known Bugs
 
 ## Technologies Used
-Jupyter Notebook
+Html Document
 
 ## Support and contact details
 To make a contribution to the code or any part of the project, 
